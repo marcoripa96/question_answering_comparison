@@ -1,0 +1,88 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 800px;
+    form {
+        display: flex;
+        flex-direction: column;
+        //align-items: center;
+
+        .optional-conf {
+            .options {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+
+        .search {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            tui-hosted-dropdown {
+                flex-grow: 1;
+                margin-right: 12px;
+            }
+        }
+
+    }
+
+    .pattern {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .entities {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .results {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container {
+        position: relative;
+
+        .btn-code {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            z-index: 10;
+        }
+    }
+
+    &::ng-deep {
+        .panning-rect {
+            cursor: default !important;
+        }
+        .ngx-charts-outer {
+            position: relative;
+        }
+    }
+
+}
+
+
+.previous-questions {
+    .prev-question {
+        justify-content: flex-start;
+        
+
+        span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        tui-svg {
+            color: var(--tui-base-04);
+            margin-right: 10px;
+        }
+    }
+}

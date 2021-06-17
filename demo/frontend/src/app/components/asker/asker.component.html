@@ -1,0 +1,152 @@
+<ng-container *ngIf="{
+    dataKGQA: dataKGQA$ | async,
+    dataFTQA: dataFTQA$ | async,
+    loading: loading$ | async
+  } as res">
+
+  <!-- SEARCH BAR -->
+  <form *ngIf="previousQuestions$ | async as previousQuestions" [formGroup]="searchForm" class="tui-space_bottom-5">
+    <div tuiGroup [collapsed]="true" class="radio-buttons tui-space_bottom-3">
+      <tui-radio-block contentAlign="right" formControlName="type" item="kgqa" size="s">
+        Knowledge base question answering
+      </tui-radio-block>
+      <tui-radio-block contentAlign="right" formControlName="type" item="ftqa" size="s">
+        Free text question answering
+      </tui-radio-block>
+    </div>
+
+    <div class="optional-conf tui-space_bottom-3">
+      <ng-container *ngIf="type.value === 'ftqa'">
+        <div class="options">
+          <tui-select formControlName="ftqaType" [tuiTextfieldLabelOutside]="true" tuiTextfieldSize="s" class="tui-space_bottom-3">
+            <tui-data-list-wrapper *tuiDataList [items]="optionsFTQA"></tui-data-list-wrapper>
+          </tui-select>
+
+          <tui-text-area *ngIf="ftqaType.value === 'Span of text'" formControlName="span" tuiTextfieldSize="m" tuiTextfieldAutocomplete="off"
+          spellcheck="false">
+            Insert the span of text
+          </tui-text-area>
+        </div>
+      </ng-container>
+    </div>
+
+
+
+    <div class="search">
+      <tui-hosted-dropdown [content]="dropdown" [(open)]="openDropdown" tuiDropdownLimitWidth="fixed">
+        <tui-input [tuiTextfieldLabelOutside]="true" formControlName="question" tuiTextfieldAutocomplete="off"
+          spellcheck="false" (keydown.enter)="ask()">
+          Type a question here
+        </tui-input>
+      </tui-hosted-dropdown>
+
+      <ng-template #dropdown>
+        <tui-data-list class="previous-questions">
+          <button class="prev-question" *ngFor="let prevQuestion of previousQuestions" tuiOption
+            (click)="setQuestion(prevQuestion)">
+            <tui-svg src="tuiIconTime"></tui-svg>
+            <span>{{prevQuestion}}</span>
+          </button>
+        </tui-data-list>
+      </ng-template>
+
+      <button (click)="ask()" tuiButton type="button" [showLoader]="res.loading" appearance="whiteblock-active">
+        Ask
+      </button>
+    </div>
+
+  </form>
+
+  <!-- ANSWERS -->
+  <div class="wrapper">
+    <tui-loader *ngIf="!firstTime" [overlay]="true" [showLoader]="res.loading && !mouseenter">
+      <!-- GRAPH -->
+      <ng-container *ngIf="type.value === 'kgqa'; else ftqa">
+        <ng-container *ngIf="res.dataKGQA">
+          <div class="container">
+            <tui-tag [value]="'Classified pattern:' + res.dataKGQA.pattern" size="s"></tui-tag>
+            <button class="btn-code" tuiButton appearance="flat" icon="tuiIconCode" size="s"
+              (click)="openDialog(dialogTemplate)">
+              SPARQL
+            </button>
+
+            <ng-template #dialogTemplate="polymorpheus" polymorpheus let-observer>
+              <div class="tui-text_h6 tui-space_bottom-3">Generated SPARQL query</div>
+              <div class="tui-text_body-l tui-space_bottom-3">From the generated graph we can build a SPARQL query to
+                retrieve
+                the answers to the orginal question.</div>
+              <app-code-markup [content]="res.dataKGQA.query"></app-code-markup>
+            </ng-template>
+
+            <app-graph [graph]="res.dataKGQA.graph"></app-graph>
+          </div>
+
+          <!-- ANSWSERS TABLE -->
+          <table *ngIf="type.value === 'kgqa'; else ftqa" class="tui-table">
+            <tbody>
+              <tr class="tui-table__tr">
+                <th class="tui-table__th">N.</th>
+                <th class="tui-table__th">Answer</th>
+              </tr>
+              <tr *ngFor="let answer of res.dataKGQA?.answers; let i = index" class="tui-table__tr">
+                <td class="tui-table__td">{{i+1}}</td>
+                <td *ngIf="(answer | typeOf) !== 'boolean'; else answerType" class="tui-table__td">
+                  <a *ngIf="answer.startsWith('&lt;http'); else literal" target="_blank"
+                    [href]="answer | tuiMapper: getLink" tuiLink>{{answer}}</a>
+                  <ng-template #literal>
+                    {{answer}}
+                  </ng-template>
+                </td>
+                <!-- Answer type -->
+                <ng-template #answerType>
+                  <td class="tui-table__td">
+                    {{answer ? 'Yes' : 'No'}}
+                  </td>
+                </ng-template>
+              </tr>
+            </tbody>
+          </table>
+        </ng-container>
+      </ng-container>
+
+
+      <ng-template #ftqa>
+        <table *ngIf="res.dataFTQA" class="tui-table">
+          <tbody>
+            <tr class="tui-table__tr">
+              <th class="tui-table__th">N.</th>
+              <th class="tui-table__th">Answer</th>
+              <th class="tui-table__th">Score</th>
+              <th *ngIf="res.dataFTQA.answerType !== 'Span of text'" class="tui-table__th">Section</th>
+              <th class="tui-table__th">Span</th>
+              <th *ngIf="res.dataFTQA.answerType !== 'Span of text'" class="tui-table__th"></th>
+            </tr>
+            <tr *ngFor="let answer of res.dataFTQA?.answers; let i = index" class="tui-table__tr">
+              <td class="tui-table__td">{{i+1}}</td>
+              <td class="tui-table__td">
+                {{answer.answer}}
+              </td>
+              <td class="tui-table__td">
+                {{answer.score | tuiMapper: round}}
+              </td>
+              <td *ngIf="res.dataFTQA.answerType !== 'Span of text'" class="tui-table__td">
+                {{answer.section}}
+              </td>
+              <td class="tui-table__td">
+                {{answer.start}} - {{answer.end}}
+              </td>
+              <td *ngIf="res.dataFTQA.answerType !== 'Span of text'" class="tui-table__td">
+                <a tuiLink [href]="'https://en.wikipedia.org/wiki/' + answer.entity + '#' + (answer.section | tuiMapper: transformSectionLink)">
+                  <tui-svg src="tuiIconArrowUpRight"></tui-svg>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-template>
+
+    </tui-loader>
+  </div>
+
+
+</ng-container>

@@ -1,0 +1,21 @@
+version: "3"
+services:
+    backend:
+        image: rpozzi/ai_qa_backend:latest
+        # build:
+        #     context: .
+        #     dockerfile: Dockerfile-backend
+        ports:
+            - 127.0.0.1:5000:5000
+        # # persist models in external volume
+        # volumes:
+        #     - ./data:/app/backend/data
+    webapp:
+        image: rpozzi/ai_qa_webapp:latest
+        # build:
+        #     context: .
+        #     dockerfile: Dockerfile-nginx
+        ports:
+            - 127.0.0.1:80:80
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf
