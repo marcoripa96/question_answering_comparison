@@ -8,6 +8,13 @@ To know more about the project look at the [Presentation.pdf](https://docs.googl
 
 ![Demp](qascreen.png)
 
+# Group
+
+- Christian Bernasconi 816423
+- Gabriele Ferrario 817518
+- Riccardo Pozzi 807857
+- Marco Ripamonti 806785
+
 # Directory structure
 ```
 demo # demo interface
